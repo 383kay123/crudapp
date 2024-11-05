@@ -121,7 +121,7 @@ class _HomePageState extends State<HomePage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide(color: Colors.blue),
+          borderSide: const BorderSide(color: Colors.blue),
         ),
       ),
     );
@@ -130,65 +130,74 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        title: const Center(
-          child: Text(
-            'Contacts',
-            style: TextStyle(fontWeight: FontWeight.w500),
-          ),
-        ),
-      ),
+      
       floatingActionButton: FloatingActionButton(
         onPressed: () => openContactsBox(null),
         backgroundColor: Colors.green,
         child: const Icon(Icons.add),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: firestoreService.getContactsStream(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+       body: Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16.0), // Add padding for better appearance
+          child: const Text(
+            'My Contacts', // The text you want to display
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+            ),
+          ),
+        ),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: firestoreService.getContactsStream(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-            List<DocumentSnapshot> contactsList = snapshot.data!.docs;
+              if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                List<DocumentSnapshot> contactsList = snapshot.data!.docs;
 
-            return ListView.builder(
-              itemCount: contactsList.length,
-              itemBuilder: (context, index) {
-                DocumentSnapshot document = contactsList[index];
-                Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-                String contactText = data['name'] ?? 'No Name';
-                String docID = document.id;
+                return ListView.builder(
+                  itemCount: contactsList.length,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot document = contactsList[index];
+                    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+                    String contactText = data['name'] ?? 'No Name';
+                    String docID = document.id;
 
-                return ListTile(
-                  title: Text(contactText),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () => openContactsBox(docID,
-                          existingName: contactText,
-                          existingPhone: data['phone'],
-                          existingEmail: data['email'],
-                        ),
-                        icon: const Icon(Icons.edit),
+                    return ListTile(
+                      title: Text(contactText),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: () => openContactsBox(docID,
+                              existingName: contactText,
+                              existingPhone: data['phone'],
+                              existingEmail: data['email'],
+                            ),
+                            icon: const Icon(Icons.edit),
+                          ),
+                          IconButton(
+                            onPressed: () => firestoreService.deleteContact(docID),
+                            icon: const Icon(Icons.delete),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        onPressed: () => firestoreService.deleteContact(docID),
-                        icon: const Icon(Icons.delete),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 );
-              },
-            );
-          } else {
-            return const Center(child: Text('No Contacts'));
-          }
-        },
-      ),
-    );
-  }
+              } else {
+                return const Center(child: Text('No Contacts'));
+              }
+            },
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
