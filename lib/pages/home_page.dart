@@ -10,48 +10,119 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Firestore service
   final FirestoreService firestoreService = FirestoreService();
-
-  // Text controller
   final TextEditingController textController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
 
-  void openContactsBox(String? docID) {
-    // Clear the text controller when opening the dialog
-    textController.clear();
+  void openContactsBox(String? docID, {String? existingName, String? existingPhone, String? existingEmail}) {
+    textController.text = existingName ?? '';
+    phoneController.text = existingPhone ?? '';
+    emailController.text = existingEmail ?? '';
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        content: TextField(
-          controller: textController,
-          textAlign: TextAlign.right, // Align text to the right
-          decoration: InputDecoration(
-            hintText: docID == null ? 'Add a new contact' : 'Update contact', // Change hint based on mode
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15.0),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10.0,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Edit Contact',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _buildTextField(textController, 'Name'),
+                const SizedBox(height: 10),
+                _buildTextField(phoneController, 'Phone Number'),
+                const SizedBox(height: 10),
+                _buildTextField(emailController, 'Email'),
+                const SizedBox(height: 20), // Add space before buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          if (docID == null) {
+                            await firestoreService.addContact({
+                              'name': textController.text,
+                              'phone': phoneController.text,
+                              'email': emailController.text,
+                            });
+                          } else {
+                            await firestoreService.updateContact(docID, {
+                              'name': textController.text,
+                              'phone': phoneController.text,
+                              'email': emailController.text,
+                            });
+                          }
+                          // Clear text controllers after saving
+                          textController.clear();
+                          phoneController.clear();
+                          emailController.clear();
+                          Navigator.pop(context);
+                        } catch (e) {
+                          // Show error message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error saving contact: $e')),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.green,
+                      ),
+                      child: const Text('Save'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              if (docID == null) {
-                // Add a new contact
-                firestoreService.addContact(textController.text);
-              } else {
-                // Update the existing contact
-                firestoreService.updateContact(docID, textController.text);
-              }
+      ),
+    );
+  }
 
-              // Clear the text controller and close the box
-              textController.clear();
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: Colors.green,
-            ),
-            child: const Text('Save'), // Changed to 'Save' for clarity
-          ),
-        ],
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return TextField(
+      controller: controller,
+      textAlign: TextAlign.left,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+          borderSide: BorderSide(color: Colors.grey.shade400),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+          borderSide: BorderSide(color: Colors.blue),
+        ),
       ),
     );
   }
@@ -69,7 +140,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => openContactsBox(null), // Pass null for new contact
+        onPressed: () => openContactsBox(null),
         backgroundColor: Colors.green,
         child: const Icon(Icons.add),
       ),
@@ -83,28 +154,37 @@ class _HomePageState extends State<HomePage> {
           if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
             List<DocumentSnapshot> contactsList = snapshot.data!.docs;
 
-            // Display the data as a list
             return ListView.builder(
               itemCount: contactsList.length,
               itemBuilder: (context, index) {
                 DocumentSnapshot document = contactsList[index];
-
-                // Get contact data
                 Map<String, dynamic> data = document.data() as Map<String, dynamic>;
                 String contactText = data['name'] ?? 'No Name';
-                String docID = document.id; // Get the document ID
+                String docID = document.id;
 
                 return ListTile(
                   title: Text(contactText),
-                  trailing: IconButton(
-                    onPressed: () => openContactsBox(docID), // Pass the document ID to update
-                    icon: const Icon(Icons.edit), // Changed icon to edit for clarity
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () => openContactsBox(docID,
+                          existingName: contactText,
+                          existingPhone: data['phone'],
+                          existingEmail: data['email'],
+                        ),
+                        icon: const Icon(Icons.edit),
+                      ),
+                      IconButton(
+                        onPressed: () => firestoreService.deleteContact(docID),
+                        icon: const Icon(Icons.delete),
+                      ),
+                    ],
                   ),
                 );
               },
             );
           } else {
-            // If there is no data, return a message
             return const Center(child: Text('No Contacts'));
           }
         },

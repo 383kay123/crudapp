@@ -1,31 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreService {
-  
-  // Changed variable name for clarity
-  final CollectionReference contactsCollection =  // Renamed from 'contacts'
+  // Define the contacts collection reference
+  final CollectionReference contactsCollection =
       FirebaseFirestore.instance.collection('contacts');
 
-  // CREATE: Add a new contact
-  Future<void> addContact(String contactName) {  
-    return contactsCollection.add({  
-      'name': contactName,  
-      'timestamp': Timestamp.now(),
-    });
+  // Method to update a contact
+  Future<void> updateContact(String docID, Map<String, String> data) async {
+    await contactsCollection.doc(docID).update(data);
+  }
+
+  // Method to add a contact
+  Future<void> addContact(Map<String, String> data) async {
+    await contactsCollection.add(data);
   }
 
   // READ: Get contacts from database
-  Stream<QuerySnapshot> getContactsStream() { // Corrected method name for consistency
-    // Use contactsCollection instead of contacts
+  Stream<QuerySnapshot> getContactsStream() {
     return contactsCollection.orderBy('timestamp', descending: true).snapshots();
   }
 
-  //update contact given a doc id
-  Future<void>updateContact(String docID,String newContact) {
-    return contactsCollection.doc(docID).update({
+  // Update contact given a doc id
+  Future<void> updateContactById(String docID, String newContact) async {
+    await contactsCollection.doc(docID).update({
       'name': newContact,
       'timestamp': Timestamp.now(),
-
     });
+  }
+
+  // Delete contacts from database
+  Future<void> deleteContact(String docID) async {
+    await contactsCollection.doc(docID).delete();
   }
 }
