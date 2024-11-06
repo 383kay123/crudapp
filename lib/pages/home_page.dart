@@ -209,6 +209,14 @@ Widget build(BuildContext context) {
                   fontFamily: 'Poppins',
                 ),
               ),
+              subtitle: Text(
+    data['phone'] ?? 'No Phone Number',
+    style: const TextStyle(
+      color: Colors.grey,
+      fontSize: 14.0,
+      fontFamily: 'Poppins',
+    ),
+  ),
               trailing: PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'edit') {
