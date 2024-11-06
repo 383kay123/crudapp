@@ -6,13 +6,17 @@ class FirestoreService {
       FirebaseFirestore.instance.collection('contacts');
 
   // Method to update a contact
-  Future<void> updateContact(String docID, Map<String, String> data) async {
+  Future<void> updateContact(String docID, Map<String, dynamic> data) async {
     await contactsCollection.doc(docID).update(data);
   }
 
   // Method to add a contact
-  Future<void> addContact(Map<String, String> data) async {
-    await contactsCollection.add(data);
+  Future<void> addContact(Map<String, dynamic> data) async {
+    // Add timestamp field when a contact is added
+    await contactsCollection.add({
+      ...data,
+      'timestamp': Timestamp.now(),  // Ensure timestamp is included
+    });
   }
 
   // READ: Get contacts from database
@@ -24,7 +28,7 @@ class FirestoreService {
   Future<void> updateContactById(String docID, String newContact) async {
     await contactsCollection.doc(docID).update({
       'name': newContact,
-      'timestamp': Timestamp.now(),
+      'timestamp': Timestamp.now(),  // Update timestamp when modifying a contact
     });
   }
 
