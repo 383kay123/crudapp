@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crudapp/Services/firestore.dart';
+import 'package:crudapp/pages/editcontact.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,111 +17,32 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController emailController = TextEditingController();
 
   void openContactsBox(String? docID, {String? existingName, String? existingPhone, String? existingEmail}) {
-    textController.text = existingName ?? '';
-    phoneController.text = existingPhone ?? '';
-    emailController.text = existingEmail ?? '';
+  // Set the text fields with existing contact data if available
+  textController.text = existingName ?? '';
+  phoneController.text = existingPhone ?? '';
+  emailController.text = existingEmail ?? '';
 
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(20.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15.0),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 10.0,
-                offset: Offset(0, 5),
-              ),
-            ],
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Add Contact',
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF00754B),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _buildTextField(textController, 'Name'),
-                const SizedBox(height: 10),
-                _buildTextField(phoneController, 'Phone Number'),
-                const SizedBox(height: 10),
-                _buildTextField(emailController, 'Email'),
-                const SizedBox(height: 20), // Add space before buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-  onPressed: () async {
-    try {
-      if (docID == null) {
-        await firestoreService.addContact({
-          'name': textController.text,
-          'phone': phoneController.text,
-          'email': emailController.text,
-        });
-      } else {
-        await firestoreService.updateContact(docID, {
-          'name': textController.text,
-          'phone': phoneController.text,
-          'email': emailController.text,
-        });
-      }
-      // Clear text controllers after saving
-      textController.clear();
-      phoneController.clear();
-      emailController.clear();
-      Navigator.pop(context);
-
-      // Show success message
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Contact saved successfully')),
-          );
-        }
-      });
-    } catch (e) {
-      // Show error message
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error saving contact')),
-          );
-        }
-      });
-    }
-  },
-  style: ElevatedButton.styleFrom(
-    foregroundColor: Colors.white,
-    backgroundColor: Color(0xFF00754B),
-  ),
-  child: const Text('Save'),
-),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => EditContactPage(
+        docID: docID,
+        existingName: existingName ?? '',
+        existingPhone: existingPhone ?? '',
+        existingEmail: existingEmail ?? '',
       ),
-    );
-  }
+    ),
+  ).then((result) {
+    // Show a confirmation snackbar after successful save
+    if (result != null && result == 'Contact saved successfully') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result,style: TextStyle(fontFamily: 'Poppins',color: Color(0xFF00754B),),),
+        backgroundColor: Colors.white,
+        behavior: SnackBarBehavior.floating,),
+      );
+    }
+  });
+}
 
   Widget _buildTextField(TextEditingController controller, String label) {
     return TextField(
