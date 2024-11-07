@@ -82,7 +82,7 @@ class _HomePageState extends State<HomePage> {
       phoneController.clear();
       emailController.clear();
       Navigator.pop(context);
-      
+
       // Show success message
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -143,6 +143,7 @@ class _HomePageState extends State<HomePage> {
  @override
 Widget build(BuildContext context) {
   return Scaffold(
+    
     backgroundColor: Colors.white,
     floatingActionButton: FloatingActionButton(
       onPressed: () => openContactsBox(null),
@@ -152,6 +153,7 @@ Widget build(BuildContext context) {
       ),
       child:  Image.asset('assets/images/add-user.png'),
     ),
+    
     body: Column(
       children: [
         const SizedBox(height: 40),
@@ -169,7 +171,7 @@ Widget build(BuildContext context) {
                   fontFamily: 'Poppins',
                 ),
               ),
-            
+
               Divider(
                 thickness: 3.0,
                 color: Color(0xFF00754B),
@@ -203,6 +205,10 @@ Widget build(BuildContext context) {
             String docID = document.id;
 
             return ListTile(
+              leading: Image.asset('assets/images/user.png'),
+               
+
+              
               title: Text(contactText, 
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
@@ -257,7 +263,17 @@ Widget build(BuildContext context) {
           },
         );
       } else {
-        return const Center(child: Text('No Contacts'));
+       return Center(
+  child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Image.asset('assets/images/open-box.png'),
+     const SizedBox(height: 10,),
+      const Text('You have no contacts yet', style: TextStyle(fontFamily: 'Poppins',fontWeight: FontWeight.w400, fontSize: 15),),
+    ],
+  ),
+);
       }
     },
   ),
@@ -265,6 +281,6 @@ Widget build(BuildContext context) {
       ]
       )
   );
-      
+
 }
 }
